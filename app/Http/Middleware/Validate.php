@@ -38,6 +38,7 @@ class Validate
         }
         $validate = Validator::make($request->all(),$rules);
         if($validate->fails()){
+            console.log("Invalid Input");
             return response()->json(['message'=>$validate->errors()],422);
         }
         return $next($request);
