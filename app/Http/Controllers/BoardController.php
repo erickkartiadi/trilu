@@ -6,6 +6,7 @@ use App\Board;
 use App\BoardMember;
 use App\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class BoardController extends Controller
 {
@@ -50,7 +51,19 @@ class BoardController extends Controller
     }
 
     public function open(Board $board){
-        return Board::where('id',$board->id)->with('lists.cards')->get();
+        $users =  DB::select('SELECT * from BOARD_MEMBERS
+            INNER JOIN BOARDS ON BOARD_MEMBERS.board_id = BOARDS.id 
+            INNER JOIN USERS ON BOARD_MEMBERS.user_id = USERS.id 
+            WHERE board_id = ? AND boards.creator_id != board_members.user_id
+        ',[$board->id]);
+
+        $board_result = Board::where('id',$board->id)->with('lists.cards')->get();
+        $board_result[0]->users = array_map(function($user) {
+            $user->initial = substr($user->first_name, 0, 1) . substr($user->last_name, 0, 1);
+            return $user;
+        }, $users);
+        
+        return $board_result;
     }
 
     public function addMember(Request $request,Board $board){
